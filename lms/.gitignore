@@ -1,0 +1,6 @@
+
+local_*.py
+
+.idea/
+
+.pyc
