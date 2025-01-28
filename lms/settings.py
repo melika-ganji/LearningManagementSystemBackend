@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'accounts.apps.AccountsConfig',
+    'courses.apps.CoursesConfig',
 
 ]
 

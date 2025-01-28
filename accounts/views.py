@@ -23,7 +23,6 @@ class RegisterView(APIView):
         user = user_serializer.save()
 
         role = request.data.get('role')
-
         if role == 'admin':
             profile_data = {'user': user.id, 'name': request.data.get('name', ),
                             'lastName': request.data.get('lastName'), 'username': request.data.get('username')}
