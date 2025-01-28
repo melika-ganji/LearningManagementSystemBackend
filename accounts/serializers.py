@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import CustomUser, AdminProfile, ProfessorProfile, StudentProfile
+from courses.serializers import CourseSerializer
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -50,10 +51,11 @@ class ProfessorProfileSerializer(serializers.ModelSerializer):
     workbook = serializers.CharField(required=False)
     image = serializers.ImageField(required=False)
     description = serializers.CharField(required=False)
+    created_courses = CourseSerializer(source='user.course_set', many=True)
 
     class Meta:
         model = ProfessorProfile
-        fields = ['name', 'lastName', 'user', 'specialty', 'workbook', 'image', 'description']
+        fields = ['name', 'lastName', 'user', 'specialty', 'workbook', 'image', 'description', 'created_courses']
 
     def validate(self, data):
         if self.instance is None:
@@ -77,10 +79,11 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
     username = serializers.CharField(required=False)
     national_code = serializers.CharField(required=False)
+    purchased_courses = CourseSerializer(many=True)
 
     class Meta:
         model = StudentProfile
-        fields = ['name', 'lastName', 'username', 'user', 'national_code']
+        fields = ['name', 'lastName', 'username', 'user', 'national_code', 'purchased_courses']
 
     def validate(self, data):
         if self.instance is None:

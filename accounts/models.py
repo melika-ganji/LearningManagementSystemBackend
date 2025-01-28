@@ -63,8 +63,10 @@ class ProfessorProfile(AbstractProfile):
     workbook = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    created_courses = models.ManyToManyField('Course', related_name='professors', blank=True)
 
 
 class StudentProfile(AbstractProfile):
     username = models.CharField(max_length=20, unique=True, blank=True)
     national_code = models.CharField(max_length=10, blank=True, null=True)
+    purchased_courses = models.ManyToManyField('Course', related_name='students', blank=True)
