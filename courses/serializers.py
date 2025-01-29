@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from accounts.serializers import CustomUserSerializer
+
 from courses.models import *
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -49,6 +49,8 @@ class CourseContentSerializer(serializers.ModelSerializer):
 
 
 class PurchaseSerializer(serializers.ModelSerializer):
+    from accounts.serializers import CustomUserSerializer
+
     student = CustomUserSerializer(read_only=True)  # Serialize student details
     course = CourseSerializer(read_only=True)  # Serialize course details
 

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import CustomUser, AdminProfile, ProfessorProfile, StudentProfile
-from courses.serializers import CourseSerializer
+
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -46,6 +46,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfessorProfileSerializer(serializers.ModelSerializer):
+    from courses.serializers import CourseSerializer
     user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
     specialty = serializers.CharField(required=False)
     workbook = serializers.CharField(required=False)
@@ -76,6 +77,7 @@ class ProfessorProfileSerializer(serializers.ModelSerializer):
 
 
 class StudentProfileSerializer(serializers.ModelSerializer):
+    from courses.serializers import CourseSerializer
     user = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
     username = serializers.CharField(required=False)
     national_code = serializers.CharField(required=False)
