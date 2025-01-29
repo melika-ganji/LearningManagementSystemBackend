@@ -8,11 +8,11 @@ from courses.models import (Category,
                             Course,
                             Heading,
                             Comment,
-                            CourseContent)
+                            CourseContent, Purchase)
 from courses.serializers import (CategorySerializer,
                                  CourseSerializer,
                                  HeadingSerializer, CommentSerializer,
-                                 CourseContentSerializer)
+                                 CourseContentSerializer, PurchaseSerializer)
 
 
 class CategoryListCreateView(APIView):
@@ -213,3 +213,30 @@ class CourseContentRetrieveUpdateDestroyView(APIView):
         content = self.get_object(pk)
         content.delete()
         return Response({"detail": "Course content deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class PurchaseCourseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=404)
+
+        if course.price > 0:  # Check if the course is paid
+            amount_paid = course.price
+        else:
+            amount_paid = 0  # Free courses
+
+        # Create purchase record
+        purchase = Purchase.objects.create(
+            student=request.user,
+            course=course,
+            amount_paid=amount_paid
+        )
+
+        course.studentsCount = course.studentsCount + 1
+        course.save()
+
+        return Response(PurchaseSerializer(purchase).data, status=201)

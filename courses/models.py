@@ -1,5 +1,8 @@
 from django.db import models
+from django.utils.timezone import now
+
 from accounts.models import CustomUser
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -10,6 +13,7 @@ class Category(models.Model):
 
 
 from django.db import models
+
 
 class CourseContent(models.Model):
     CONTENT_TYPE_CHOICES = [
@@ -72,3 +76,19 @@ class Comment(models.Model):
         return f"Comment by {self.user.phone_number} on {self.course.name}"
 
 
+class Purchase(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="purchases")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="purchases")
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_date = models.DateTimeField(default=now)
+
+    def __str__(self):
+        return f"{self.student.username} - {self.course.name} - {self.amount_paid}"
+
+
+class RevenueReport(models.Model):
+    date = models.DateField(default=now)
+    total_revenue = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"Revenue on {self.date}: {self.total_revenue}"
