@@ -24,7 +24,7 @@ class RegisterView(APIView):
 
         role = request.data.get('role')
         if role == 'admin':
-            profile_data = {'user': user.id, 'name': request.data.get('name', ),
+            profile_data = {'user': user.id, 'name': request.data.get('name'),
                             'lastName': request.data.get('lastName'), 'username': request.data.get('username')}
             profile_serializer = AdminProfileSerializer(data=profile_data)
 
@@ -46,8 +46,6 @@ class RegisterView(APIView):
         profile_serializer.is_valid(raise_exception=True)
         profile_serializer.save(user=user)
 
-        refresh = RefreshToken.for_user(user)
-
         return Response({
             'user': user_serializer.data,
             'profile': profile_serializer.data,
@@ -55,8 +53,7 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
-    permission_classes = []
-    authentication_classes = []
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
@@ -71,23 +68,27 @@ class AdminProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'admin':
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
         try:
             return AdminProfile.objects.get(pk=self.kwargs['pk'])
         except AdminProfile.DoesNotExist:
             raise NotFound("Admin profile not found.")
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)  # Allow partial updates
-        instance = self.get_object()  # Get the existing profile instance
+        if request.user.role != 'admin':
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
 
-        # Extract and handle the 'user' data if provided
         user_data = request.data.pop('user', None)
         if user_data:
             user_serializer = CustomUserSerializer(instance=instance.user, data=user_data, partial=partial)
             user_serializer.is_valid(raise_exception=True)
             user_serializer.save()
 
-        # Update the profile instance with the remaining data
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -107,12 +108,20 @@ class ProfessorProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAP
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         try:
             return ProfessorProfile.objects.get(pk=self.kwargs['pk'])
         except ProfessorProfile.DoesNotExist:
             raise NotFound("Professor profile not found.")
 
     def update(self, request, *args, **kwargs):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         user_data = request.data.pop('user', None)
@@ -128,6 +137,10 @@ class ProfessorProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAP
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         instance = self.get_object()
         instance.user.is_active = False
         instance.user.save()
@@ -140,12 +153,20 @@ class StudentProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIV
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         try:
             return StudentProfile.objects.get(pk=self.kwargs['pk'])
         except StudentProfile.DoesNotExist:
             raise NotFound("Student profile not found.")
 
     def update(self, request, *args, **kwargs):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         user_data = request.data.pop('user', None)
@@ -161,6 +182,10 @@ class StudentProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIV
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
+        if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
+            return Response({"detail": "You do not have permission to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
         instance = self.get_object()
         instance.user.is_active = False
         instance.user.save()

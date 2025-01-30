@@ -4,11 +4,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.models import CustomUser, AdminProfile, ProfessorProfile, StudentProfile
 
 
-
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'phone_number', 'role', 'password']
+        fields = ['id', 'phone_number', 'role']
         extra_kwargs = {
             'password': {'write_only': True},
             'phone_number': {'required': True},
@@ -16,6 +15,8 @@ class CustomUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        if validated_data['role'] == 'admin':
+            return CustomUser.objects.create_superuser(**validated_data)
         return CustomUser.objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
@@ -34,14 +35,18 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdminProfile
-        fields = ['name', 'lastName', 'username', 'user']
+        fields = ['user', 'name', 'lastName', 'username']
 
     def validate(self, data):
         if self.instance is None:
             if 'user' not in data:
                 raise serializers.ValidationError({'user': 'This field is required during creation.'})
+            if 'name' not in data:
+                raise serializers.ValidationError({'name': 'This field is required during creation.'})
             if 'lastName' not in data:
                 raise serializers.ValidationError({'lastName': 'This field is required during creation.'})
+            if 'username' not in data:
+                raise serializers.ValidationError({'username': 'This field is required during creation.'})
         return data
 
 
@@ -56,13 +61,19 @@ class ProfessorProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfessorProfile
-        fields = ['name', 'lastName', 'user', 'specialty', 'workbook', 'image', 'description', 'created_courses']
+        fields = ['user','name', 'lastName', 'specialty', 'workbook', 'image', 'description', 'created_courses']
 
     def validate(self, data):
         if self.instance is None:
             if 'user' not in data:
                 raise serializers.ValidationError({'user': 'This field is required during creation.'})
+            if 'name' not in data:
+                raise serializers.ValidationError({'name': 'This field is required during creation.'})
             if 'lastName' not in data:
+                raise serializers.ValidationError({'lastName': 'This field is required during creation.'})
+            if 'speciality' not in data:
+                raise serializers.ValidationError({'speciality': 'This field is required during creation.'})
+            if 'workbook' not in data:
                 raise serializers.ValidationError({'lastName': 'This field is required during creation.'})
         return data
 
@@ -85,14 +96,20 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ['name', 'lastName', 'username', 'user', 'national_code', 'purchased_courses']
+        fields = ['user', 'name', 'lastName', 'username', 'national_code', 'purchased_courses']
 
     def validate(self, data):
         if self.instance is None:
             if 'user' not in data:
                 raise serializers.ValidationError({'user': 'This field is required during creation.'})
+            if 'name' not in data:
+                raise serializers.ValidationError({'name': 'This field is required during creation.'})
             if 'lastName' not in data:
                 raise serializers.ValidationError({'lastName': 'This field is required during creation.'})
+            if 'username' not in data:
+                raise serializers.ValidationError({'username': 'This field is required during creation.'})
+            if 'national_code' not in data:
+                raise serializers.ValidationError({'national_code': 'This field is required during creation.'})
         return data
 
     def create(self, validated_data):

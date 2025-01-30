@@ -49,10 +49,11 @@ class CategoryRetrieveUpdateDestroyView(APIView):
         serializer = CategorySerializer(data=category)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk, *args, **kwargs):
+    def update(self, request, pk, *args, **kwargs):
         if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
+
         category = self.get_object(pk)
         serializer = CategorySerializer(category, data=request.data, partial=True)
         if serializer.is_valid():
@@ -60,7 +61,7 @@ class CategoryRetrieveUpdateDestroyView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, *args, **kwargs):
+    def destroy(self, request, pk, *args, **kwargs):
         if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
@@ -103,10 +104,11 @@ class CourseRetrieveUpdateDestroyView(APIView):
         serializer = CourseSerializer(course)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk, *args, **kwargs):
-        if not request.user.is_staff:
+    def update(self, request, pk, *args, **kwargs):
+        if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
+
         course = self.get_object(pk)
         serializer = CourseSerializer(course, data=request.data, partial=True)
         if serializer.is_valid():
@@ -114,8 +116,8 @@ class CourseRetrieveUpdateDestroyView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, *args, **kwargs):
-        if not request.user.is_staff:
+    def destroy(self, request, pk, *args, **kwargs):
+        if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
         instance = self.get_object(pk)
@@ -152,9 +154,6 @@ class CommentListCreateView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        if request.user.role != 'admin':
-            return Response({"detail": "You do not have permission to perform this action."},
-                            status=status.HTTP_403_FORBIDDEN)
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -195,41 +194,53 @@ class CourseContentRetrieveUpdateDestroyView(APIView):
         serializer = CourseContentSerializer(content)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk, *args, **kwargs):
-        if not request.user.is_staff:
+    def update(self, request, pk, *args, **kwargs):
+        if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
         content = self.get_object(pk)
-        serializer = CourseContentSerializer(content, data=request.data, partial=True)  # Allow partial updates
+        serializer = CourseContentSerializer(content, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk, *args, **kwargs):
-        if not request.user.is_staff:
+    def destroy(self, request, pk, *args, **kwargs):
+        if request.user.role != 'admin':
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
-        content = self.get_object(pk)
-        content.delete()
-        return Response({"detail": "Course content deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        instance = self.get_object(pk)
+        instance.is_active = False
+        instance.save()
+        return Response({"detail": "course content deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class PurchaseCourseView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, course_id=None):
+        if course_id:
+            try:
+                purchase = Purchase.objects.get(student=request.user, course_id=course_id)
+                return Response(PurchaseSerializer(purchase).data, status=status.HTTP_200_OK)
+            except Purchase.DoesNotExist:
+                return Response({"error": "No purchase record found for this course"},
+                                status=status.HTTP_404_NOT_FOUND)
+
+        purchases = Purchase.objects.filter(student=request.user)
+        return Response(PurchaseSerializer(purchases, many=True).data, status=status.HTTP_200_OK)
+
     def post(self, request, course_id):
         try:
             course = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
-            return Response({"error": "Course not found"}, status=404)
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if course.price > 0:  # Check if the course is paid
+        if course.price > 0:
             amount_paid = course.price
         else:
-            amount_paid = 0  # Free courses
+            amount_paid = 0
 
-        # Create purchase record
         purchase = Purchase.objects.create(
             student=request.user,
             course=course,
@@ -239,4 +250,4 @@ class PurchaseCourseView(APIView):
         course.studentsCount = course.studentsCount + 1
         course.save()
 
-        return Response(PurchaseSerializer(purchase).data, status=201)
+        return Response(PurchaseSerializer(purchase).data, status=status.HTTP_201_CREATED)

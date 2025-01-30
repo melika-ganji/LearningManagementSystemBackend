@@ -12,9 +12,6 @@ class Category(models.Model):
         return self.name
 
 
-from django.db import models
-
-
 class CourseContent(models.Model):
     CONTENT_TYPE_CHOICES = [
         ('text', 'Text'),
