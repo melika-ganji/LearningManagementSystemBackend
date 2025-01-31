@@ -10,7 +10,7 @@ from accounts.serializers import CustomUserSerializer
 from courses.models import Course, Category
 from courses.serializers import CourseSerializer, CategorySerializer
 from .serializers import UserSearchSerializer, CourseSearchSerializer, CategorySearchSerializer
-from .filters import UserFilter, CourseFilter, CategoryFilter
+from search.filters import UserFilter, CourseFilter, CategoryFilter
 
 
 class UserSearchView(ListAPIView):
@@ -34,13 +34,13 @@ class UserSearchView(ListAPIView):
 
         if user_role == "admin":
             users = CustomUser.objects.filter(
-                Q(username__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query) | Q(
+                Q(phone_number__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query) | Q(
                     last_name__icontains=query)
             )
         elif user_role == "professor":
             users = CustomUser.objects.filter(
                 Q(role="student") &
-                (Q(username__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query) | Q(
+                (Q(phone_number__icontains=query) | Q(email__icontains=query) | Q(first_name__icontains=query) | Q(
                     last_name__icontains=query))
             )
         else:

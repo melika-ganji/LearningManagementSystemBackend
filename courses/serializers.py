@@ -1,3 +1,6 @@
+from importlib.metadata import requires
+from unicodedata import category
+
 from rest_framework import serializers
 
 
@@ -44,7 +47,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'text', 'created_at']
+        fields = ['id', 'user', 'text','course', 'created_at']
 
     def validate(self, data):
         if self.instance is None:
@@ -52,18 +55,22 @@ class CommentSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'text': 'This field is required during creation.'})
         return data
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
 
 class CourseSerializer(serializers.ModelSerializer):
     price_history = PriceHistorySerializer(many=True, read_only=True)
     headings = HeadingSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-    categoryName = serializers.ReadOnlyField(source='category.name')
+    category_name = serializers.ReadOnlyField(source='category.name')
 
     class Meta:
         model = Course
         fields = [
-            'id', 'name', 'master','category_name', 'description', 'price', 'price_history',
-            'headings', 'comments', 'start_date', 'students_count', 'created_at', 'updated_at',
+            'id', 'name', 'master','category', 'category_name', 'description', 'price', 'price_history',
+            'headings', 'comments', 'startDate', 'studentsCount', 'created_at', 'updated_at',
         ]
 
     def validate(self, data):
@@ -74,17 +81,16 @@ class CourseSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'category': 'This field is required during creation.'})
             if 'price' not in data:
                 raise serializers.ValidationError({'price': 'This field is required during creation.'})
-            if 'headings' not in data:
-                raise serializers.ValidationError({'headings': 'This field is required during creation.'})
         return data
 
 
 class CourseContentSerializer(serializers.ModelSerializer):
-    course = CourseSerializer(read_only=True)
+    # course = CourseSerializer(read_only=True)
+    course_name = serializers.ReadOnlyField(source='course.name')
 
     class Meta:
         model = CourseContent
-        fields = ['id', 'course', 'content_type', 'title', 'content_file', 'text_content', 'created_at']
+        fields = ['id', 'course', 'course_name', 'content_type', 'title', 'contentFile', 'textContent', 'created_at']
 
     def validate(self, data):
         if self.instance is None:

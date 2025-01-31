@@ -55,12 +55,18 @@ class RegisterView(APIView):
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        tokens_and_user = serializer.save()
-        return Response(tokens_and_user, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
 
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AdminProfile.objects.all()
@@ -95,7 +101,7 @@ class AdminProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIVie
 
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.user.is_active = False
         instance.user.save()
@@ -136,7 +142,7 @@ class ProfessorProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAP
         self.perform_update(serializer)
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
@@ -181,7 +187,7 @@ class StudentProfileRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIV
         self.perform_update(serializer)
         return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         if self.request.user.role != 'admin' and self.request.user.id != self.kwargs['pk']:
             return Response({"detail": "You do not have permission to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
