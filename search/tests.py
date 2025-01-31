@@ -40,20 +40,20 @@ class SearchTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['phone_number'], '1234567890')
 
-    # def test_search_categories(self):
-    #     self.client.force_authenticate(user=self.admin_user)
-    #
-    #     response = self.client.get('/search/categories/', {"query": "Programming"})
-    #
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]['name'], 'Programming')
-    #
-    # def test_search_courses(self):
-    #     self.client.force_authenticate(user=self.admin_user)
-    #
-    #     response = self.client.get('/search/courses/', {"query": "Python"})
-    #
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(response.data), 1)
-    #     self.assertEqual(response.data[0]['name'], 'Python Basics')
+    def test_search_categories(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get('/search/categories/', {"query": "Programming"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Programming')
+
+    def test_search_courses(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get('/search/courses/', {"query": "Python"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Python Basics')
