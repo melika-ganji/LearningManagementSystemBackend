@@ -46,7 +46,7 @@ Secure APIs
 Built with Django Rest Framework (DRF)
 ______________________________________________________________________________________________________________________________________________________
 
-#Technologies Used
+# Technologies Used
 
 Python 3.11
 
