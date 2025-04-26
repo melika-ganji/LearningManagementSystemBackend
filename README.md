@@ -57,3 +57,7 @@ Django Rest Framework
 Django Filters
 
 PostgreSQL
+
+JWT
+
+Celery
